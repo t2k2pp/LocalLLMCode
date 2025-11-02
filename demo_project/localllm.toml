@@ -1,0 +1,32 @@
+# LocalLLM Code Configuration
+
+[llm]
+provider = "lmstudio"
+model = "default" 
+context_size = 8192
+stream = true
+
+[lmstudio]
+server_url = "http://localhost:1234"
+model = "default"
+
+[safety]
+require_confirmation = true
+backup_before_edit = true
+allow_dangerous_commands = false
+
+[project]
+ignore_patterns = [
+    ".git", 
+    "__pycache__", 
+    "node_modules", 
+    ".venv",
+    "*.pyc"
+]
+memory_file = "LOCALLLM.md"
+
+[ui]
+theme = "dark"
+show_progress = true
+syntax_highlighting = true
+emoji_enabled = true

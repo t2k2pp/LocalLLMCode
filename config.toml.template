@@ -1,0 +1,72 @@
+# LocalLLM Code 設定ファイル
+
+[os]
+# OS固有設定
+os_type = "auto"  # auto, windows, linux, mac
+list_command = "auto"  # auto, dir, ls
+shell_type = "auto"  # auto, cmd, powershell, bash, zsh
+path_separator = "auto"  # auto, "/", "\\"
+
+# 注意：
+# - "auto"設定では自動検出されます
+# - Windows環境では通常 dir/cmd/\ が使用されます
+# - Linux/Mac環境では通常 ls/bash// が使用されます
+
+[general]
+# 基本設定
+language = "ja"  # ja: 日本語, en: 英語
+dry_run = false
+safe_mode = true
+verbose = false
+
+[context]
+# コンテキスト管理設定
+max_tokens = 16384  # 最大コンテキスト長 (推奨: 16384)
+compression_threshold = 0.8  # コンテキスト圧縮開始の閾値 (80%)
+auto_compression = true  # 自動コンテキスト圧縮
+warning_threshold = 0.9  # 警告表示の閾値 (90%)
+preserve_ratio = 0.3  # 圧縮時に保持する割合 (30%)
+
+# モデル別推奨設定
+# Gemma-3n-e4b-it-text: max_tokens = 16384
+# Llama-3-8B: max_tokens = 8192  
+# CodeLlama-34B: max_tokens = 16384
+
+[lm_studio]
+# LM Studio設定
+host = "localhost"
+port = 1234
+api_key = ""
+model_name = "gemma-3n-e4b-it-text"  # 使用予定モデル
+timeout = 60
+
+[azure]
+# Azure ChatGPT設定 (オプション)
+api_key = ""
+endpoint = ""
+deployment_name = ""
+api_version = "2024-02-15-preview"
+
+[gemini]
+# Google Gemini設定 (オプション)
+api_key = ""
+model = "gemini-1.5-pro"
+
+[experimental]
+# 実験的機能
+multi_agent = true
+external_memory = true
+file_references = true
+smart_compression = true  # スマートコンテキスト圧縮
+
+[memory]
+# 外部記憶設定
+max_records = 1000
+cleanup_days = 30
+auto_save = true
+
+[tools]
+# ツール設定
+max_file_size = 1048576  # 1MB
+safe_paths_only = true
+backup_on_edit = true
