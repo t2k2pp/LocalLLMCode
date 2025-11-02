@@ -26,9 +26,10 @@ except ImportError:
 class ToolSystem:
     """革新的なツールシステム - 安全で強力な操作"""
     
-    def __init__(self, root_path: Path, safe_mode: bool = True):
+    def __init__(self, root_path: Path, safe_mode: bool = True, mcp_servers: Dict[str, str] = None):
         self.root_path = root_path
         self.safe_mode = safe_mode
+        self.mcp_servers = mcp_servers or {}
         self.file_snapshots = {}  # ファイル変更前のスナップショット
         self.modification_history = []  # ファイル変更履歴
         self.config_manager = get_config_manager()  # OS設定管理
@@ -57,6 +58,53 @@ class ToolSystem:
             'analyze_improvements': self.analyze_improvements,
             'check_code_quality': self.check_code_quality
         }
+        self._initialize_mcp_tools()
+
+    def _initialize_mcp_tools(self):
+        """MCPサーバーからツールを初期化"""
+        import aiohttp
+        import asyncio
+
+        async def fetch_mcp_tools():
+            for server_name, server_url in self.mcp_servers.items():
+                try:
+                    async with aiohttp.ClientSession() as session:
+                        async with session.get(f"{server_url}/.well-known/mcp.json") as response:
+                            if response.status == 200:
+                                mcp_config = await response.json()
+                                for tool_info in mcp_config.get('tools', []):
+                                    tool_name = f"{server_name}_{tool_info['name']}"
+                                    self.tools[tool_name] = self._create_mcp_tool(server_url, tool_info)
+                except Exception as e:
+                    console.print(f"[red]Error connecting to MCP server {server_name}: {e}[/red]")
+
+        asyncio.run(fetch_mcp_tools())
+
+    def _create_mcp_tool(self, server_url: str, tool_info: Dict[str, Any]):
+        """MCPツールを作成"""
+        import aiohttp
+        import json
+
+        async def mcp_tool(params: str) -> str:
+            try:
+                async with aiohttp.ClientSession() as session:
+                    # Parse params into a dictionary
+                    try:
+                        params_dict = json.loads(params)
+                    except json.JSONDecodeError:
+                        # Fallback for simple string params
+                        # Assuming the first parameter is the value
+                        param_name = tool_info['parameters']['properties'].keys()[0]
+                        params_dict = {param_name: params}
+
+                    async with session.post(f"{server_url}/{tool_info['name']}", json=params_dict) as response:
+                        if response.status == 200:
+                            return await response.text()
+                        else:
+                            return f"Error executing MCP tool {tool_info['name']}: {response.status}"
+            except Exception as e:
+                return f"Error executing MCP tool {tool_info['name']}: {e}"
+        return mcp_tool
     
     def get_tool_descriptions(self) -> str:
         """ツールの説明を取得"""

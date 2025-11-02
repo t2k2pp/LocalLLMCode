@@ -1,0 +1,17 @@
+# LocalLLM Code Configuration for Simple Projects
+
+[llm]
+provider = "lmstudio"
+model = "default"
+context_size = 8192
+stream = true
+temperature = 0.7
+
+[lmstudio]
+server_url = "http://localhost:1234"
+model = "default"
+
+[safety]
+require_confirmation = true
+allow_dangerous_commands = false
+backup_before_edit = true
