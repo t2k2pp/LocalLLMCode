@@ -115,7 +115,8 @@ class LocalLLMCode:
         # ツールシステム初期化
         tools = ToolSystem(
             self.root_path, 
-            safe_mode=self.config.get('safety', {}).get('require_confirmation', True)
+            safe_mode=self.config.get('safety', {}).get('require_confirmation', True),
+            mcp_servers=self.config.get('mcp_servers', {})
         )
         
         # マルチエージェントシステム初期化
@@ -222,6 +223,8 @@ class LocalLLMCode:
             await self._handle_boss_command(parts[1:] if len(parts) > 1 else [])
         elif cmd == 'agents':
             self._show_agents_status()
+        elif cmd == 'agent':
+            await self._execute_subagent(parts[1] if len(parts) > 1 else None, parts[2:] if len(parts) > 2 else [])
         elif cmd == 'config':
             await self._handle_config_command(parts[1:] if len(parts) > 1 else [])
         else:
@@ -411,6 +414,97 @@ class LocalLLMCode:
         else:
             console.print("🎩 Boss Consultation: Not available")
     
+    async def _execute_custom_command(self, cmd: str, args: list):
+        """カスタムコマンドを処理"""
+        command_path = self.root_path / '.localllm' / 'commands' / f'{cmd}.md'
+
+        if not command_path.exists():
+            console.print(f"[red]{t('unknown_command', cmd=cmd)}[/red]")
+            console.print(t("type_help"))
+            return
+
+        try:
+            content = command_path.read_text(encoding='utf-8')
+
+            # Extract shell command from markdown
+            import re
+            match = re.search(r"```bash\n(.*?)\n```", content, re.DOTALL)
+            if not match:
+                console.print(f"[red]No bash script found in {cmd}.md[/red]")
+                return
+
+            script = match.group(1)
+
+            # Pass arguments to the script
+            script_with_args = f"{script} {' '.join(args)}"
+
+            console.print(f"Executing custom command: [bold green]/{cmd}[/bold green]")
+
+            # Execute the script
+            process = await asyncio.create_subprocess_shell(
+                script_with_args,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+
+            stdout, stderr = await process.communicate()
+
+            if stdout:
+                console.print(stdout.decode())
+            if stderr:
+                console.print(f"[red]{stderr.decode()}[/red]")
+
+        except Exception as e:
+            console.print(f"[red]Error executing custom command /{cmd}: {e}[/red]")
+
+    async def _execute_subagent(self, agent_name: str, args: list):
+        """サブエージェントを実行"""
+        if not agent_name:
+            console.print("[red]Usage: /agent <agent_name> <prompt>[/red]")
+            return
+
+        agent_path = self.root_path / '.localllm' / 'agents' / f'{agent_name}.md'
+        if not agent_path.exists():
+            console.print(f"[red]Subagent '{agent_name}' not found.[/red]")
+            return
+
+        try:
+            content = agent_path.read_text(encoding='utf-8')
+
+            # Extract system prompt from markdown
+            import re
+            match = re.search(r"## System Prompt\n\n(.*)", content, re.DOTALL)
+            system_prompt = match.group(1).strip() if match else ""
+
+            import copy
+            subagent_dna = copy.copy(self.project_dna)
+            subagent_dna.system_prompt = system_prompt
+
+            tools = ToolSystem(
+                self.root_path,
+                safe_mode=self.config.get('safety', {}).get('require_confirmation', True)
+            )
+
+            subagent = ReActAgent(
+                self.llm_client,
+                subagent_dna,
+                tools,
+                self.dry_run,
+                None, # No multi-agent system for subagents
+                self.external_memory
+            )
+
+            prompt = " ".join(args)
+            console.print(f"Executing subagent: [bold green]/{agent_name}[/bold green] with prompt: [italic]{prompt}[/italic]")
+
+            response = await subagent.execute(prompt)
+            console.print(f"\nSubagent {agent_name}:")
+            console.print(Markdown(response))
+
+        except Exception as e:
+            console.print(f"[red]Error executing subagent /{agent_name}: {e}[/red]")
+
+
     async def _handle_config_command(self, args: list):
         """設定コマンドの処理"""
         config_path = self.root_path / 'localllm.toml'
@@ -552,6 +646,10 @@ backup_before_edit = true
 auto_refactoring = false
 context_compression = true
 memory_optimization = true
+
+[mcp_servers]
+# Add your MCP server configurations here
+# example_server = "http://localhost:8080"
 '''
     
     with open(config_path, 'w', encoding='utf-8') as f:

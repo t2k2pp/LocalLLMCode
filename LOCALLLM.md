@@ -1,6 +1,6 @@
 # LocalLLM Code Project Memory
 
-Generated: 2025-07-13T00:28:31.191632
+Generated: 2025-11-02T07:06:34.883094
 
 ## Project DNA
 
@@ -16,25 +16,24 @@ Project DNA Analysis:
   "naming_convention": "snake_case",
   "documentation_style": "docstring"
 }
-- Complexity Score: 6.25/10.0
+- Complexity Score: 7.21/10.0
 - Common Operations: add new feature, fix bug, refactor code, update dependencies, write tests
 
 
 ## Project Structure
 ```
+├── .localllm
+│   └── commands
+│       └── hello.md
 ├── .localllm_memory
 │   ├── records
 │   └── metadata.json
 ├── Task
-│   ├── projects
+│   ├── LOCALLLM.md
 │   ├── README_MANY.md
 │   ├── miniapp.md
 │   └── todo.md
 ├── demo_project
-│   ├── .localllm_memory
-│   │   ├── records
-│   │   ├── metadata.json
-│   │   └── session_log.md
 │   ├── src
 │   │   ├── api
 │   │   ├── models
@@ -50,6 +49,12 @@ Project DNA Analysis:
 │   ├── localllm.toml
 │   ├── pyproject.toml
 │   └── requirements.txt
+├── docs
+│   ├── アプリ紹介文章と説明スライド情報.md
+│   ├── アーキテクチャ図.md
+│   ├── クラス図とシーケンス図.md
+│   ├── 基本設計書.md
+│   └── 詳細設計書.md
 ├── localllm
 │   ├── agents
 │   │   ├── __init__.py
@@ -61,7 +66,11 @@ Project DNA Analysis:
 │   │   ├── context_manager.py
 │   │   ├── file_parser.py
 │   │   ├── i18n.py
+│   │   ├── instruction_parser.py
 │   │   └── project_dna.py
+│   ├── intelligence
+│   │   ├── __init__.py
+│   │   └── code_analyzer.py
 │   ├── llm
 │   │   ├── __init__.py
 │   │   ├── analyzers.py
@@ -78,14 +87,13 @@ Project DNA Analysis:
 │   └── __init__.py
 ├── CLAUDE.md
 ├── FutureFeatureProposals.md
-├── LOCALLLM.md
-├── config.toml.template
+├── INTELLIGENT_SUGGESTIONS_PLAN.md
 ```
 
 ## Learning Notes
 - This project follows Python conventions
 - Architecture patterns: Microservices
-- Complexity level: 6.2/10.0
+- Complexity level: 7.2/10.0
 
 ## Common Operations
 - add new feature
